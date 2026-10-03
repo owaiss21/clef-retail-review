@@ -28,6 +28,11 @@ CLIP_CHECKS = {
 }
 
 MOMENT_CHECKS = {
+    "taking": {
+        "type": "noul",
+        "label": "Taking",
+        "instructions": "In these frames, is the shopper reaching into a shelf, rack or counter and taking a product?",
+    },
     "in_hand": {
         "type": "noul",
         "label": "In hand",

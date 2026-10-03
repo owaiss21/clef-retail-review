@@ -1,27 +1,404 @@
 {
-  "source": {
+ "collections": [
+  {
+   "id": "real",
+   "name": "Real CCTV",
+   "source": {
+    "name": "UCF-Crime (Shoplifting), DCSASS split",
+    "author": "Sultani, Chen and Shah, UCF",
+    "url": "https://www.crcv.ucf.edu/projects/real-world/",
+    "mirror": "https://huggingface.co/datasets/Centrique/tcc-shoplifting",
+    "license": "Research use only",
+    "note": "Real store camera footage of real incidents. Labels are per segment (1 to 5 s), from DCSASS."
+   },
+   "public": false,
+   "clips": [
+    {
+     "id": "tablet-towel",
+     "video": "Shoplifting054",
+     "start": 13.0,
+     "end": 32.7,
+     "scene": "Electronics counter",
+     "camera": "CAM 01",
+     "flag": true,
+     "labels": [
+      {
+       "kind": "theft",
+       "start": 10.55,
+       "end": 12.6
+      }
+     ],
+     "summary": "Covers a tablet with a towel and walks off with it.",
+     "short": "Electronics"
+    },
+    {
+     "id": "tablet-before",
+     "video": "Shoplifting054",
+     "start": 0.0,
+     "end": 13.0,
+     "scene": "Electronics counter",
+     "camera": "CAM 01",
+     "flag": false,
+     "labels": [],
+     "summary": "The same shopper looking at tablets, before the theft.",
+     "short": "Electronics"
+    },
+    {
+     "id": "jacket",
+     "video": "Shoplifting005",
+     "start": 16.0,
+     "end": 36.0,
+     "scene": "Electronics store",
+     "camera": "CAM 01",
+     "flag": true,
+     "labels": [
+      {
+       "kind": "theft",
+       "start": 8.0,
+       "end": 14.0
+      }
+     ],
+     "summary": "Slips an item inside his jacket.",
+     "short": "Electronics"
+    },
+    {
+     "id": "aisle-pocket",
+     "video": "Shoplifting022",
+     "start": 2.0,
+     "end": 20.0,
+     "scene": "Grocery aisle",
+     "camera": "CAM 01",
+     "flag": true,
+     "labels": [
+      {
+       "kind": "theft",
+       "start": 6.1,
+       "end": 12.17
+      }
+     ],
+     "summary": "Pockets an item in a grocery aisle.",
+     "short": "Grocery"
+    },
+    {
+     "id": "aisle-browse",
+     "video": "Shoplifting022",
+     "start": 24.0,
+     "end": 44.0,
+     "scene": "Grocery aisle",
+     "camera": "CAM 01",
+     "flag": false,
+     "labels": [],
+     "summary": "Shoppers in the same aisle, no theft labelled.",
+     "short": "Grocery"
+    },
+    {
+     "id": "box-bag",
+     "video": "Shoplifting016",
+     "start": 10.0,
+     "end": 30.0,
+     "scene": "Stationery",
+     "camera": "CAM 03",
+     "flag": true,
+     "labels": [
+      {
+       "kind": "theft",
+       "start": 5.36,
+       "end": 14.58
+      }
+     ],
+     "summary": "Takes a box from a shelf into her bag.",
+     "short": "Stationery"
+    },
+    {
+     "id": "phone-counter",
+     "video": "Shoplifting049",
+     "start": 28.0,
+     "end": 48.0,
+     "scene": "Phone counter",
+     "camera": "CAM 02",
+     "flag": true,
+     "labels": [
+      {
+       "kind": "theft",
+       "start": 6.41,
+       "end": 18.55
+      }
+     ],
+     "summary": "Takes a phone from the counter.",
+     "short": "Phone"
+    },
+    {
+     "id": "phone-browse",
+     "video": "Shoplifting049",
+     "start": 0.0,
+     "end": 20.0,
+     "scene": "Phone counter",
+     "camera": "CAM 02",
+     "flag": false,
+     "labels": [],
+     "summary": "The same counter earlier, no theft labelled.",
+     "short": "Phone"
+    },
+    {
+     "id": "cosmetics",
+     "video": "Shoplifting018",
+     "start": 8.0,
+     "end": 28.0,
+     "scene": "Cosmetics aisle",
+     "camera": "CAM 01",
+     "flag": true,
+     "labels": [
+      {
+       "kind": "theft",
+       "start": 4.14,
+       "end": 20.0
+      }
+     ],
+     "summary": "Takes items from a shelf in a cosmetics aisle.",
+     "short": "Cosmetics"
+    }
+   ]
+  },
+  {
+   "id": "picks",
+   "name": "Shelf picks",
+   "source": {
+    "name": "MERL Shopping Dataset",
+    "author": "Mitsubishi Electric Research Laboratories",
+    "url": "https://www.merl.com/research/downloads/MERL_Shopping_Dataset",
+    "mirror": "https://huggingface.co/datasets/Voxel51/MERL_Shopping_Dataset",
+    "license": "Non-commercial research use only",
+    "note": "Real people filmed by an overhead camera at grocery shelves. Labels are frame accurate."
+   },
+   "public": false,
+   "clips": [
+    {
+     "id": "picks-1",
+     "video": "14_1",
+     "start": 4.0,
+     "end": 22.0,
+     "scene": "Shelf",
+     "camera": "OVERHEAD",
+     "flag": false,
+     "labels": [
+      {
+       "kind": "in_hand",
+       "start": 12.5,
+       "end": 15.93
+      },
+      {
+       "kind": "reach",
+       "start": 9.47,
+       "end": 12.37
+      }
+     ],
+     "summary": "Picks products off the shelf and looks at them.",
+     "short": "Picks"
+    },
+    {
+     "id": "picks-2",
+     "video": "27_1",
+     "start": 6.0,
+     "end": 24.0,
+     "scene": "Shelf",
+     "camera": "OVERHEAD",
+     "flag": false,
+     "labels": [
+      {
+       "kind": "in_hand",
+       "start": 4.4,
+       "end": 8.1
+      },
+      {
+       "kind": "in_hand",
+       "start": 17.97,
+       "end": 18.0
+      },
+      {
+       "kind": "reach",
+       "start": 1.67,
+       "end": 4.3
+      },
+      {
+       "kind": "reach",
+       "start": 8.3,
+       "end": 11.03
+      },
+      {
+       "kind": "reach",
+       "start": 15.23,
+       "end": 17.87
+      }
+     ],
+     "summary": "Picks products off the shelf and looks at them.",
+     "short": "Picks"
+    },
+    {
+     "id": "picks-3",
+     "video": "5_2",
+     "start": 4.0,
+     "end": 22.0,
+     "scene": "Shelf",
+     "camera": "OVERHEAD",
+     "flag": false,
+     "labels": [
+      {
+       "kind": "reach",
+       "start": 3.5,
+       "end": 9.17
+      },
+      {
+       "kind": "reach",
+       "start": 13.5,
+       "end": 15.93
+      }
+     ],
+     "summary": "Picks products off the shelf and looks at them.",
+     "short": "Picks"
+    }
+   ]
+  },
+  {
+   "id": "synthetic",
+   "name": "Synthetic",
+   "source": {
     "name": "CCTV Shoplifting Detection Dataset (free sample)",
     "author": "Simuletic",
     "url": "https://www.kaggle.com/datasets/simuletic/cctv-shoplifting-detection-dataset-yolo-and-vlm",
     "license": "CC BY 4.0",
     "note": "Computer-generated footage. No real people were recorded."
-  },
-  "clips": [
-    {"id": "phones-hide", "file": "shoplifting1.mp4", "scene": "Phone table", "short": "Phones", "camera": "CAM 02", "flag": true,
-     "action": [2.0, 4.0], "summary": "Takes a boxed phone and slips it under their jacket."},
-    {"id": "phones-return", "file": "not_shoplifting1.mp4", "scene": "Phone table", "short": "Phones", "camera": "CAM 02", "flag": false,
-     "action": [2.0, 4.0], "summary": "Looks at a boxed phone and sets it back on the table."},
-    {"id": "hardware-hide", "file": "shoplifting2.mp4", "scene": "Hardware aisle", "short": "Hardware", "camera": "CAM 05", "flag": true,
-     "action": [2.0, 4.0], "summary": "Pushes a small box into their hoodie pouch."},
-    {"id": "hardware-return", "file": "not_shoplifting2.mp4", "scene": "Hardware aisle", "short": "Hardware", "camera": "CAM 05", "flag": false,
-     "action": [2.0, 4.0], "summary": "Looks at a small box and puts it back on the shelf."},
-    {"id": "grocery-hide", "file": "shoplifting3.mp4", "scene": "Grocery aisle", "short": "Grocery", "camera": "CAM 07", "flag": true,
-     "action": [3.3, 6.7], "summary": "Takes a box and slides it inside their jacket."},
-    {"id": "grocery-return", "file": "not_shoplifting3.mp4", "scene": "Grocery aisle", "short": "Grocery", "camera": "CAM 07", "flag": false,
-     "action": [2.0, 4.0], "summary": "Reads a box and returns it to the shelf."},
-    {"id": "clothing-hide", "file": "shoplifting4.mp4", "scene": "Clothing", "short": "Clothing", "camera": "CAM 11", "flag": true,
-     "action": [3.3, 6.7], "summary": "Stuffs a folded garment into their tote bag."},
-    {"id": "clothing-return", "file": "not_shoplifting4.mp4", "scene": "Clothing", "short": "Clothing", "camera": "CAM 11", "flag": false,
-     "action": [2.0, 4.0], "summary": "Looks at a folded garment and puts it back on the rack."}
-  ]
+   },
+   "public": true,
+   "clips": [
+    {
+     "id": "phones-hide",
+     "file": "shoplifting1.mp4",
+     "scene": "Phone table",
+     "short": "Phones",
+     "camera": "CAM 02",
+     "flag": true,
+     "summary": "Takes a boxed phone and slips it under their jacket.",
+     "labels": [
+      {
+       "kind": "theft",
+       "start": 2.0,
+       "end": 4.0
+      }
+     ]
+    },
+    {
+     "id": "phones-return",
+     "file": "not_shoplifting1.mp4",
+     "scene": "Phone table",
+     "short": "Phones",
+     "camera": "CAM 02",
+     "flag": false,
+     "summary": "Looks at a boxed phone and sets it back on the table.",
+     "labels": [
+      {
+       "kind": "put_back",
+       "start": 2.0,
+       "end": 4.0
+      }
+     ]
+    },
+    {
+     "id": "hardware-hide",
+     "file": "shoplifting2.mp4",
+     "scene": "Hardware aisle",
+     "short": "Hardware",
+     "camera": "CAM 05",
+     "flag": true,
+     "summary": "Pushes a small box into their hoodie pouch.",
+     "labels": [
+      {
+       "kind": "theft",
+       "start": 2.0,
+       "end": 4.0
+      }
+     ]
+    },
+    {
+     "id": "hardware-return",
+     "file": "not_shoplifting2.mp4",
+     "scene": "Hardware aisle",
+     "short": "Hardware",
+     "camera": "CAM 05",
+     "flag": false,
+     "summary": "Looks at a small box and puts it back on the shelf.",
+     "labels": [
+      {
+       "kind": "put_back",
+       "start": 2.0,
+       "end": 4.0
+      }
+     ]
+    },
+    {
+     "id": "grocery-hide",
+     "file": "shoplifting3.mp4",
+     "scene": "Grocery aisle",
+     "short": "Grocery",
+     "camera": "CAM 07",
+     "flag": true,
+     "summary": "Takes a box and slides it inside their jacket.",
+     "labels": [
+      {
+       "kind": "theft",
+       "start": 3.3,
+       "end": 6.7
+      }
+     ]
+    },
+    {
+     "id": "grocery-return",
+     "file": "not_shoplifting3.mp4",
+     "scene": "Grocery aisle",
+     "short": "Grocery",
+     "camera": "CAM 07",
+     "flag": false,
+     "summary": "Reads a box and returns it to the shelf.",
+     "labels": [
+      {
+       "kind": "put_back",
+       "start": 2.0,
+       "end": 4.0
+      }
+     ]
+    },
+    {
+     "id": "clothing-hide",
+     "file": "shoplifting4.mp4",
+     "scene": "Clothing",
+     "short": "Clothing",
+     "camera": "CAM 11",
+     "flag": true,
+     "summary": "Stuffs a folded garment into their tote bag.",
+     "labels": [
+      {
+       "kind": "theft",
+       "start": 3.3,
+       "end": 6.7
+      }
+     ]
+    },
+    {
+     "id": "clothing-return",
+     "file": "not_shoplifting4.mp4",
+     "scene": "Clothing",
+     "short": "Clothing",
+     "camera": "CAM 11",
+     "flag": false,
+     "summary": "Looks at a folded garment and puts it back on the rack.",
+     "labels": [
+      {
+       "kind": "put_back",
+       "start": 2.0,
+       "end": 4.0
+      }
+     ]
+    }
+   ]
+  }
+ ]
 }

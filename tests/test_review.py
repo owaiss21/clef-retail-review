@@ -67,8 +67,9 @@ def test_server_reviews_then_replays_the_saved_run(clip_file, tmp_path, monkeypa
     client = TestClient(server.create_app(FakeBackend()))
 
     listed = client.get("/api/clips").json()
-    assert [c["id"] for c in listed["clips"]] == ["phones-hide"]
-    assert listed["source"]["license"] == "CC BY 4.0"
+    assert [c["id"] for c in listed] == ["synthetic"]  # collections with nothing downloaded are left out
+    assert [c["id"] for c in listed[0]["clips"]] == ["phones-hide"]
+    assert listed[0]["source"]["license"] == "CC BY 4.0"
 
     first = [json.loads(line) for line in client.post("/api/review/phones-hide").text.splitlines()]
     again = [json.loads(line) for line in client.post("/api/review/phones-hide").text.splitlines()]
@@ -77,4 +78,17 @@ def test_server_reviews_then_replays_the_saved_run(clip_file, tmp_path, monkeypa
     assert [e for e in again[:-1]] == first[:-1]
 
     assert client.post("/api/review/nope").status_code == 404
-    assert client.post("/api/review/grocery-hide").status_code == 404
+    assert client.post("/api/review/jacket").status_code == 404  # listed, not downloaded
+
+
+def test_every_clip_has_labels_inside_its_length():
+    manifest = json.loads((server.MANIFEST).read_text())
+    ids = [c["id"] for col in manifest["collections"] for c in col["clips"]]
+    assert len(ids) == len(set(ids))
+    for collection in manifest["collections"]:
+        assert collection["source"]["license"]
+        for clip in collection["clips"]:
+            length = clip["end"] - clip["start"] if "end" in clip else 10.1
+            for label in clip["labels"]:
+                assert 0 <= label["start"] < label["end"] <= length + 0.01, clip["id"]
+            assert clip["flag"] == any(lab["kind"] == "theft" for lab in clip["labels"]), clip["id"]

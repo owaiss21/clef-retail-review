@@ -1,9 +1,14 @@
 const $ = (id) => document.getElementById(id);
 const video = $("video");
 
-const COLORS = { in_hand: "--hand", hiding: "--hide", returning: "--back", picked_up: "--hand", concealed: "--hide", put_back: "--back" };
+const COLORS = {
+  taking: "--take", in_hand: "--hand", hiding: "--hide", returning: "--back",
+  picked_up: "--take", concealed: "--hide", put_back: "--back",
+  reach: "--take", theft: "--hide",
+};
 const THRESHOLD = 0.5;
 
+let collections = [];
 let clips = [];
 let current = null; // { meta, checks, moments: [], xray: [], done }
 let controller = null;
@@ -33,28 +38,44 @@ async function health() {
 }
 
 async function loadClips() {
-  const data = await (await fetch("/api/clips")).json();
-  clips = data.clips;
-  const seen = {};
-  const nav = $("clips");
-  for (const clip of clips) {
-    seen[clip.scene] = (seen[clip.scene] || 0) + 1;
-    const thumb = el("video", { src: `/media/${clip.id}.mp4#t=1.5`, muted: "", preload: "metadata" });
-    const button = el("button", { class: "clip", type: "button", "data-id": clip.id, title: clip.summary },
-      thumb, el("span", {}, clip.short, el("small", {}, "AB"[seen[clip.scene] - 1])));
-    button.addEventListener("click", () => select(clip.id));
-    nav.append(button);
+  collections = await (await fetch("/api/clips")).json();
+  clips = collections.flatMap((c) => c.clips.map((clip) => ({ ...clip, collection: c.id })));
+  const tabs = $("collections");
+  for (const collection of collections) {
+    const tab = el("button", { type: "button", "data-id": collection.id }, collection.name);
+    tab.addEventListener("click", () => select(collection.clips[0].id));
+    tabs.append(tab);
   }
-  const s = data.source;
-  $("credit").append("Footage: ", el("a", { href: s.url, target: "_blank", rel: "noopener" }, `${s.author}, ${s.name}`),
-    ` · ${s.license} · computer-generated, no real shoppers`);
   const fromHash = location.hash.slice(1);
   select(clips.some((c) => c.id === fromHash) ? fromHash : clips[0].id);
+}
+
+function showCollection(id) {
+  const collection = collections.find((c) => c.id === id);
+  for (const t of $("collections").children) t.setAttribute("aria-current", String(t.dataset.id === id));
+  const nav = $("clips");
+  if (nav.dataset.collection !== id) {
+    nav.dataset.collection = id;
+    const seen = {};
+    nav.replaceChildren(...collection.clips.map((clip) => {
+      seen[clip.short] = (seen[clip.short] || 0) + 1;
+      const twins = collection.clips.filter((c) => c.short === clip.short).length;
+      const thumb = el("video", { src: `/media/${clip.id}.mp4#t=1.5`, muted: "", preload: "metadata" });
+      const button = el("button", { class: "clip", type: "button", "data-id": clip.id, title: clip.summary },
+        thumb, el("span", {}, clip.short, twins > 1 ? el("small", {}, "ABCDEFGH"[seen[clip.short] - 1]) : null));
+      button.addEventListener("click", () => select(clip.id));
+      return button;
+    }));
+  }
+  const s = collection.source;
+  $("credit").replaceChildren("Footage: ", el("a", { href: s.url, target: "_blank", rel: "noopener" }, `${s.author}, ${s.name}`),
+    ` · ${s.license} · ${s.note}`);
 }
 
 async function select(id) {
   const clip = clips.find((c) => c.id === id);
   history.replaceState(null, "", `#${id}`);
+  showCollection(clip.collection);
   for (const b of document.querySelectorAll(".clip")) b.setAttribute("aria-current", String(b.dataset.id === id));
   $("camera").textContent = clip.camera;
   $("scene").textContent = clip.scene.toUpperCase();
@@ -146,6 +167,16 @@ function buildTimeline(meta) {
   }
   lanes.append(el("div", { class: "lane-name xray" }, "Drove the flag"));
   lanes.append(el("div", { class: "track xray", id: "lane-xray", "--c": "var(--hide)" }));
+  const labels = current.clip.labels || [];
+  if (labels.length) {
+    const lane = el("div", { class: "track labels" });
+    for (const label of labels) {
+      const cell = el("div", { class: "cell", "--c": color(label.kind), title: `Labelled ${label.kind.replace("_", " ")}` });
+      Object.assign(cell.style, span(label.start, label.end, meta.duration));
+      lane.append(cell);
+    }
+    lanes.append(el("div", { class: "lane-name xray" }, "Labelled"), lane);
+  }
   const ticks = el("div", { class: "axis" });
   const whole = Math.floor(meta.duration);
   for (let s = 0; s <= whole; s += whole > 8 ? 2 : 1) ticks.append(el("span", {}, `${s}s`));

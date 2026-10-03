@@ -54,7 +54,7 @@ def create_app(backend: Backend | None = None) -> FastAPI:
     app = FastAPI(title="clef-retail-review")
     model = backend or make_backend()
     manifest = json.loads(MANIFEST.read_text())
-    clips = {c["id"]: c for c in manifest["clips"]}
+    clips = {c["id"]: c for collection in manifest["collections"] for c in collection["clips"]}
 
     @app.get("/api/health")
     def health():
@@ -62,7 +62,13 @@ def create_app(backend: Backend | None = None) -> FastAPI:
 
     @app.get("/api/clips")
     def list_clips():
-        return {"source": manifest["source"], "clips": [c for c in manifest["clips"] if (MEDIA / f"{c['id']}.mp4").exists()]}
+        """Collections with the clips that have been downloaded; empty collections are left out."""
+        out = []
+        for collection in manifest["collections"]:
+            ready = [c for c in collection["clips"] if (MEDIA / f"{c['id']}.mp4").exists()]
+            if ready:
+                out.append({**collection, "clips": ready})
+        return out
 
     @app.post("/api/review/{clip_id}")
     def run_review(clip_id: str, fresh: bool = False):

@@ -6,6 +6,7 @@
   --ink: #0f172a;
   --ink-2: #475569;
   --ink-3: #94a3b8;
+  --take: 214, 140, 20;
   --hand: 42, 120, 214;
   --hide: 220, 60, 60;
   --back: 22, 150, 100;
@@ -25,6 +26,7 @@
     --ink: #f3f4f6;
     --ink-2: #a1a1aa;
     --ink-3: #6b6b74;
+    --take: 235, 165, 50;
     --hand: 72, 145, 235;
     --hide: 235, 90, 90;
     --back: 45, 180, 125;
@@ -41,13 +43,17 @@ button { font: inherit; color: inherit; }
 
 /* top bar */
 .topbar {
-  display: flex; align-items: center; gap: 20px; padding: 12px 24px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding: 10px 24px;
   background: var(--panel); border-bottom: 1px solid var(--line);
 }
 .logo { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px; letter-spacing: -0.02em; white-space: nowrap; }
 .mark { width: 18px; height: 18px; border-radius: 5px; background: var(--strong); position: relative; }
 .mark::after { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: rgb(var(--hide)); }
-.clips { display: flex; gap: 8px; flex: 1; overflow-x: auto; padding: 2px; }
+.collections { display: flex; gap: 2px; padding: 3px; background: var(--soft); border-radius: 10px; flex: 0 0 auto; }
+.collections button { border: 0; background: none; padding: 5px 11px; border-radius: 7px; cursor: pointer; color: var(--ink-2); font-weight: 500; font-size: 13px; white-space: nowrap; }
+.collections button:hover { color: var(--ink); }
+.collections button[aria-current="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.clips { display: flex; gap: 8px; flex-basis: 100%; overflow-x: auto; padding: 2px; scrollbar-width: none; }
 .clip {
   flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 3px 10px 3px 3px;
   border: 1px solid var(--line); border-radius: 9px; background: var(--panel); cursor: pointer; color: var(--ink-2);
@@ -68,7 +74,7 @@ button { font: inherit; color: inherit; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
 
 /* camera */
-.screen { position: relative; background: #000; border-radius: var(--radius); overflow: hidden; aspect-ratio: 16 / 9; }
+.screen { position: relative; background: #000; border-radius: var(--radius); overflow: hidden; aspect-ratio: 2 / 1; }
 .screen video { width: 100%; height: 100%; object-fit: contain; display: block; }
 .hud { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; pointer-events: none; }
 .hud-top { top: 0; background: linear-gradient(rgba(0,0,0,.55), transparent); color: #fff; font: 500 12px/1 var(--mono); letter-spacing: .04em; }
@@ -88,12 +94,14 @@ button { font: inherit; color: inherit; }
 
 /* timeline */
 .timeline { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px 10px; cursor: pointer; user-select: none; }
-.lanes { display: grid; grid-template-columns: 104px minmax(0, 1fr); row-gap: 6px; align-items: center; }
+.lanes { display: grid; grid-template-columns: 104px minmax(0, 1fr); row-gap: 5px; align-items: center; }
 .lane-name { font-size: 12.5px; color: var(--ink-2); font-weight: 500; display: flex; align-items: center; gap: 7px; }
 .lane-name i { width: 8px; height: 8px; border-radius: 2px; background: rgb(var(--c)); }
-.track { position: relative; height: 26px; border-radius: 6px; background: var(--soft); overflow: hidden; }
+.track { position: relative; height: 20px; border-radius: 6px; background: var(--soft); overflow: hidden; }
 .cell { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, rgb(var(--c)) calc(var(--p) * 100%), var(--soft)); }
 .track.xray { height: 14px; }
+.track.labels { height: 8px; }
+.track.labels .cell { --p: .55; }
 .lane-name.xray { color: var(--ink-3); font-size: 12px; }
 .axis { grid-column: 2; display: flex; justify-content: space-between; font: 11px var(--mono); color: var(--ink-3); padding-top: 2px; }
 .playhead { position: absolute; top: 8px; bottom: 24px; width: 2px; margin-left: -1px; background: var(--ink); border-radius: 1px; pointer-events: none; left: 0; display: none; }
@@ -130,6 +138,5 @@ button { font: inherit; color: inherit; }
 
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; padding: 16px; }
-  .topbar { flex-wrap: wrap; padding: 12px 16px; }
-  .clips { order: 3; flex-basis: 100%; }
+  .topbar { padding: 10px 16px; }
 }
