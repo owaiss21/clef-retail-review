@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Retail Review</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%230f172a%22/%3E%3Crect x=%226%22 y=%229%22 width=%2214%22 height=%2214%22 rx=%223%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%222.4%22/%3E%3Cpath d=%22M20 14l6-3v10l-6-3z%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2213%22 cy=%2216%22 r=%222.4%22 fill=%22%23e34948%22/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><span class="mark"></span>Retail Review</div>
+    <nav class="clips" id="clips" aria-label="Clips"></nav>
+  </header>
+
+  <main class="layout">
+    <section class="stage">
+      <div class="screen">
+        <video id="video" muted playsinline loop></video>
+        <div class="hud hud-top">
+          <span class="rec"><i></i><b id="camera"></b><span id="scene"></span></span>
+          <span class="clock num" id="clock">00:00.0</span>
+        </div>
+        <div class="hud hud-bottom" id="live"></div>
+      </div>
+
+      <div class="timeline" id="timeline">
+        <div class="lanes" id="lanes"></div>
+        <div class="playhead" id="playhead"></div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="panel verdict" id="verdict" data-state="idle" aria-live="polite">
+        <div class="verdict-label" id="verdict-label">Reviewing</div>
+        <div class="verdict-value num" id="verdict-value">—</div>
+        <div class="verdict-bar"><i id="verdict-bar"></i></div>
+      </section>
+
+      <section class="panel">
+        <ul class="checks" id="checks"></ul>
+      </section>
+
+      <section class="panel stats">
+        <dl id="stats"></dl>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="credit" id="credit"></footer>
+  <script src="app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "source": {
+    "name": "CCTV Shoplifting Detection Dataset (free sample)",
+    "author": "Simuletic",
+    "url": "https://www.kaggle.com/datasets/simuletic/cctv-shoplifting-detection-dataset-yolo-and-vlm",
+    "license": "CC BY 4.0",
+    "note": "Computer-generated footage. No real people were recorded."
+  },
+  "clips": [
+    {"id": "phones-hide", "file": "shoplifting1.mp4", "scene": "Phone table", "short": "Phones", "camera": "CAM 02", "flag": true,
+     "action": [2.0, 4.0], "summary": "Takes a boxed phone and slips it under their jacket."},
+    {"id": "phones-return", "file": "not_shoplifting1.mp4", "scene": "Phone table", "short": "Phones", "camera": "CAM 02", "flag": false,
+     "action": [2.0, 4.0], "summary": "Looks at a boxed phone and sets it back on the table."},
+    {"id": "hardware-hide", "file": "shoplifting2.mp4", "scene": "Hardware aisle", "short": "Hardware", "camera": "CAM 05", "flag": true,
+     "action": [2.0, 4.0], "summary": "Pushes a small box into their hoodie pouch."},
+    {"id": "hardware-return", "file": "not_shoplifting2.mp4", "scene": "Hardware aisle", "short": "Hardware", "camera": "CAM 05", "flag": false,
+     "action": [2.0, 4.0], "summary": "Looks at a small box and puts it back on the shelf."},
+    {"id": "grocery-hide", "file": "shoplifting3.mp4", "scene": "Grocery aisle", "short": "Grocery", "camera": "CAM 07", "flag": true,
+     "action": [3.3, 6.7], "summary": "Takes a box and slides it inside their jacket."},
+    {"id": "grocery-return", "file": "not_shoplifting3.mp4", "scene": "Grocery aisle", "short": "Grocery", "camera": "CAM 07", "flag": false,
+     "action": [2.0, 4.0], "summary": "Reads a box and returns it to the shelf."},
+    {"id": "clothing-hide", "file": "shoplifting4.mp4", "scene": "Clothing", "short": "Clothing", "camera": "CAM 11", "flag": true,
+     "action": [3.3, 6.7], "summary": "Stuffs a folded garment into their tote bag."},
+    {"id": "clothing-return", "file": "not_shoplifting4.mp4", "scene": "Clothing", "short": "Clothing", "camera": "CAM 11", "flag": false,
+     "action": [2.0, 4.0], "summary": "Looks at a folded garment and puts it back on the rack."}
+  ]
+}

@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clef-retail-review"
+version = "0.1.0"
+description = "Ask an open decision model what happens in a store camera clip, and when."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Owais Mahmood" }]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "numpy>=1.26",
+    "opencv-python-headless>=4.9",
+]
+
+[project.optional-dependencies]
+model = [
+    "torch>=2.11",
+    "transformers>=5.10.2",
+    "huggingface_hub>=0.30",
+    "pillow>=10",
+    "flash-linear-attention>=0.3",
+]
+demo = ["playwright>=1.45"]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[project.scripts]
+retail-review = "retailreview.cli:main"
+
+[tool.setuptools]
+packages = ["retailreview"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
