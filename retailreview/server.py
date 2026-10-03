@@ -16,10 +16,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import review as review_module
 from .checks import CLIP_CHECKS, MOMENT_CHECKS, STATE
 from .model import MODEL_ID, Backend, make_backend
-from .review import review
+from .review import WINDOW_FRAMES, WINDOW_STEP, XRAY_SEGMENTS, review
 from .video import read_clip
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -32,8 +31,8 @@ MANIFEST = ROOT / "clips" / "clips.json"
 def settings_key() -> str:
     """Anything that changes the answers changes this, so old recordings are never replayed by mistake."""
     blob = json.dumps(
-        [MODEL_ID, STATE, CLIP_CHECKS, MOMENT_CHECKS, review_module.WINDOW_FRAMES,
-         review_module.WINDOW_STEP, review_module.XRAY_SEGMENTS, read_clip.__defaults__],
+        [MODEL_ID, STATE, CLIP_CHECKS, MOMENT_CHECKS, WINDOW_FRAMES, WINDOW_STEP, XRAY_SEGMENTS,
+         read_clip.__defaults__],
         sort_keys=True,
     )
     return hashlib.sha256(blob.encode()).hexdigest()[:12]

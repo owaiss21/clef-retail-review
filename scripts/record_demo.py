@@ -43,7 +43,12 @@ def main():
                 stamps.append(time.perf_counter())
 
         for clip in args.clips:
-            page.click(f".clip[data-id='{clip}']")
+            button = page.query_selector(f".clip[data-id='{clip}']")
+            if button:
+                button.click()
+            else:  # clip from another collection; the page follows the address
+                page.evaluate(f"location.hash = '{clip}'")
+                page.wait_for_selector(f".clip[data-id='{clip}'][aria-current='true']")
             page.evaluate("document.getElementById('video').currentTime = 0")
             film(lambda: page.query_selector("#stats dt") is not None)
             stop = time.perf_counter() + args.hold

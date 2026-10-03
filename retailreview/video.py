@@ -14,8 +14,7 @@ FRAME_PAIR = 2
 @dataclass
 class Clip:
     frames: np.ndarray  # (T, H, W, 3) uint8 RGB
-    times: list[float]  # seconds, one per frame
-    duration: float
+    duration: float  # seconds
 
     @property
     def rate(self) -> float:
@@ -39,7 +38,7 @@ def read_clip(path, fps: float = 4.0, side: int = 448) -> Clip:
     count = max(FRAME_PAIR, int(round(duration * fps / FRAME_PAIR)) * FRAME_PAIR)
     # sample the middle of each slot rather than its edge, so the last frame isn't the final one
     wanted = ((np.arange(count) + 0.5) * total / count).astype(int)
-    frames, times = [], []
+    frames = []
     index, next_wanted = 0, 0
     while next_wanted < count:
         ok, frame = cap.read()
@@ -47,15 +46,14 @@ def read_clip(path, fps: float = 4.0, side: int = 448) -> Clip:
             break
         while next_wanted < count and wanted[next_wanted] == index:
             frames.append(_resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), side))
-            times.append(index / source_fps)
             next_wanted += 1
         index += 1
     cap.release()
     if not frames:
         raise ValueError(f"could not read frames from {path}")
     if len(frames) % FRAME_PAIR:
-        frames, times = frames[:-1], times[:-1]
-    return Clip(np.stack(frames), times, duration)
+        frames = frames[:-1]
+    return Clip(np.stack(frames), duration)
 
 
 def _resize(frame: np.ndarray, side: int) -> np.ndarray:

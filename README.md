@@ -2,7 +2,9 @@
 
 **Ask an open decision model what happens in a store camera clip, and when.**
 
-![Same shopper, same aisle: one clip gets flagged, the other doesn't](docs/img/demo.gif)
+![A real theft on store CCTV gets flagged, then a real shopper picking from a shelf does not](docs/img/demo.gif)
+
+*Real store CCTV from UCF-Crime, then a shopper at a shelf from the MERL Shopping Dataset. Both are research-only footage; see [The footage](#the-footage).*
 
 [Clef-flash](https://huggingface.co/Cloudflare/clef-flash) is a 9B open-weight model from Cloudflare that answers typed questions (yes/no, pick one, score) with a probability for every option. It doesn't write text. It reads images and video too, and it runs on one consumer GPU.
 
@@ -30,13 +32,11 @@ There are three sets, picked to test different things.
 | **Shelf picks** | The [MERL Shopping Dataset](https://www.merl.com/research/downloads/MERL_Shopping_Dataset) ([mirror](https://huggingface.co/datasets/Voxel51/MERL_Shopping_Dataset)): real people filmed by an overhead camera at grocery shelves, with frame-accurate labels for every reach into the shelf. | 3 | Non-commercial research only |
 | **Synthetic** | The free sample of Simuletic's [CCTV Shoplifting Detection Dataset](https://www.kaggle.com/datasets/simuletic/cctv-shoplifting-detection-dataset-yolo-and-vlm). Computer-generated store cameras, in matched pairs: the same shopper either hides the item or puts it back. | 8 | CC BY 4.0 |
 
-The first two sets are real footage but can't be used commercially, so anything I post publicly (like the GIF above) uses the synthetic set.
+The first two sets are real footage, but neither license allows commercial use. The GIF above shows clips from both, so treat it as research material too. For anything commercial, use the synthetic set or footage you record yourself.
 
 ## Results
 
 ### Shelf picks: does it see the moment an item is taken?
-
-![Real shopper at a shelf: the Taking lane lines up with the labelled reaches](docs/img/picks.gif)
 
 Yes. This is the clearest result in the project.
 
@@ -126,7 +126,7 @@ Other scripts:
 
 ```bash
 python scripts/evaluate.py                                        # every table above, from scratch
-python scripts/record_demo.py docs/img/demo.gif hardware-hide hardware-return
+python scripts/record_demo.py docs/img/demo.gif jacket picks-2
 python scripts/shoot.py picks-2 shot.png --at 9.5 --dark
 pytest
 ```
@@ -147,4 +147,4 @@ scripts/       fetch the clips, evaluate, screenshot, record GIFs
 
 ## License
 
-Code is MIT. Clef-flash is Apache-2.0. The footage keeps its own license (see the table above). It isn't in this repo; `fetch_clips.py` downloads it from the source. `docs/img/picks.gif` shows MERL footage and is here for research use only.
+Code is MIT. Clef-flash is Apache-2.0. The footage keeps its own license (see the table above). It isn't in this repo; `fetch_clips.py` downloads it from the source. `docs/img/demo.gif` and `demo.mp4` show UCF-Crime and MERL footage and are here for research use only.

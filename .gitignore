@@ -1,5 +1,6 @@
 .venv/
 data/
-results*.json
+*.egg-info/
+build/
 __pycache__/
 .pytest_cache/

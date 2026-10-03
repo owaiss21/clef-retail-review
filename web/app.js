@@ -303,6 +303,11 @@ $("timeline").addEventListener("click", (e) => {
   video.currentTime = x * meta.duration;
 });
 
+window.addEventListener("hashchange", () => {
+  const id = location.hash.slice(1);
+  if (id !== current?.clip.id && clips.some((c) => c.id === id)) select(id);
+});
+
 health();
 loadClips();
 tick();
