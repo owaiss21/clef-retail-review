@@ -13,13 +13,19 @@
   <header class="topbar">
     <div class="logo"><span class="mark"></span>Retail Review</div>
     <nav class="collections" id="collections" aria-label="Footage"></nav>
+    <label class="upload" title="Review your own video or photo">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 11V2.5M4.5 6 8 2.5 11.5 6M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Upload
+      <input type="file" id="upload" accept="video/*,image/*" hidden>
+    </label>
     <nav class="clips" id="clips" aria-label="Clips"></nav>
   </header>
 
   <main class="layout">
     <section class="stage">
       <div class="screen">
-        <video id="video" muted playsinline loop></video>
+        <video id="video" muted playsinline></video>
+        <img id="still" alt="" hidden>
         <div class="hud hud-top">
           <span class="rec"><i></i><b id="camera"></b><span id="scene"></span></span>
           <span class="clock num" id="clock">00:00.0</span>
@@ -38,19 +44,17 @@
         <div class="verdict-label" id="verdict-label">Reviewing</div>
         <div class="verdict-value num" id="verdict-value">—</div>
         <div class="verdict-bar"><i id="verdict-bar"></i></div>
+        <div class="verdict-when num" id="verdict-when"></div>
       </section>
 
       <section class="panel">
         <ul class="checks" id="checks"></ul>
       </section>
-
-      <section class="panel stats">
-        <dl id="stats"></dl>
-      </section>
     </aside>
   </main>
 
   <footer class="credit" id="credit"></footer>
+  <div class="drop" id="drop" hidden><div>Drop a video or photo</div></div>
   <script src="app.js" type="module"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 
 **Ask an open decision model what happens in a store camera clip, and when.**
 
-![A real theft on store CCTV gets flagged, then a real shopper picking from a shelf does not](docs/img/demo.gif)
+![A real theft on store CCTV: the verdict climbs while the clip plays and ends flagged. Then a shopper picking from a shelf, never flagged](docs/img/demo.gif)
 
 *Real store CCTV from UCF-Crime, then a shopper at a shelf from the MERL Shopping Dataset. Both are research-only footage; see [The footage](#the-footage).*
 
@@ -14,13 +14,16 @@ This is meant to **flag clips for a person to look at**. It doesn't catch anyone
 
 ## What's on the screen
 
-- **The camera.** The clip plays on a loop. When the model thinks something is happening at that moment, a tag shows up on the video (`Taking 54%`, `Hiding 93%`).
+- **The camera.** The clip plays once. When the model thinks something is happening at that moment, a tag shows up on the video (`Taking 54%`, `Hiding 93%`). Click it to pause or replay.
 - **The timeline.** The clip is cut into 1.5-second windows every half second. Each window gets four questions: are they taking something off a shelf, is a product in their hand, are they hiding it, are they putting it back? The darker the cell, the more sure the model is. This is the part that answers *when*.
 - **Drove the flag.** Each sixth of the clip is greyed out in turn and the whole clip is asked again. A segment lights up when greying it out makes the flag drop.
 - **Labelled.** What the dataset itself says happened, and when. It's there so you can check the model by eye.
 - **The flag.** Three questions about the whole clip: did they pick something up, did they put it back, did they hide it. The flag is `hid it × (1 − put it back)`, so taking something and returning it never gets flagged, however suspicious it looks.
+- **The flag as it plays.** Every two seconds the same three questions are asked about the clip *so far*. The flag and the checks show the answer for the footage up to the playhead, and the lanes fill in as the video reaches them. On the real theft that gets flagged, the flag sits at 2% for the first 6 seconds, starts rising at 8 s when the labelled theft begins, passes 50% at 16 s and ends at 59%. "Drove the flag" appears once the whole clip has played.
 
-Click the timeline to jump to that moment.
+Click the timeline to jump to that moment and see the verdict as it stood then.
+
+**Your own footage.** Click **Upload** (or drop a file anywhere on the page) to review a video or a photo. Videos are converted to H.264 MP4 and cut at two minutes. They get the full review: checks, timeline and "Drove the flag". A photo only gets the three checks and the flag, because there's no "when" in a single frame. Expect photos to score lower than video of the same moment. A still from the one real theft that gets flagged (Electronics C) only reaches 26%, against 59% for the clip. Uploads stay in `data/uploads` on your machine and show up under an Uploads tab.
 
 ## The footage
 
@@ -99,7 +102,8 @@ On an RTX 4090, in bfloat16:
 | Whole clip, 3 questions, 6 s (24 frames) | 0.54 s |
 | Whole clip, 3 questions, 18 to 20 s (72 to 80 frames) | 1.15 to 1.30 s |
 | One 1.5 s window, 4 questions | 0.16 to 0.19 s |
-| Full review of a 20 s clip (45 calls) | 15 s |
+| Full review of a 6 s clip (19 calls) | 6.2 s |
+| Full review of a 20 s clip (54 calls) | 21 s |
 | GPU memory | about 20 GB |
 
 These are with `flash-linear-attention` installed but without `causal-conv1d`, which needs a CUDA compiler I didn't have.
@@ -118,7 +122,7 @@ retail-review serve                   # http://127.0.0.1:8000
 
 The first start downloads Clef-flash from Hugging Face (19 GB). `torch` 2.11 or newer and `transformers` 5.10.2 or newer are required. The synthetic set is a 500 MB download that keeps 12 MB. The other two download only what they need.
 
-Finished reviews are saved under `data/cache`. Opening a clip again replays the saved run at the speed it was measured, and the stats panel says "recorded". Add `?fresh=1` to the page URL to ask the model again.
+Finished reviews are saved under `data/cache`. Opening a clip again replays the saved run at the speed it was measured. Add `?fresh=1` to the page URL to ask the model again. A live review keeps ahead of the video on an RTX 4090, so the page looks the same either way.
 
 To work on the page without a GPU, `RETAIL_BACKEND=fake retail-review serve` returns made-up numbers.
 

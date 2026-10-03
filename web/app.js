@@ -27,27 +27,46 @@ function el(tag, attrs = {}, ...children) {
   return node;
 }
 
-let device = "";
 async function health() {
   try {
-    const info = await (await fetch("/api/health")).json();
-    device = info.device.replace("NVIDIA GeForce ", "");
+    if (!(await fetch("/api/health")).ok) throw new Error();
   } catch {
     showError("Model server offline");
   }
 }
 
-async function loadClips() {
+async function loadClips(show) {
   collections = await (await fetch("/api/clips")).json();
   clips = collections.flatMap((c) => c.clips.map((clip) => ({ ...clip, collection: c.id })));
-  const tabs = $("collections");
-  for (const collection of collections) {
+  $("collections").replaceChildren(...collections.map((collection) => {
     const tab = el("button", { type: "button", "data-id": collection.id }, collection.name);
-    tab.addEventListener("click", () => select(collection.clips[0].id));
-    tabs.append(tab);
+    tab.addEventListener("click", () => select((collection.id === "uploads" ? collection.clips.at(-1) : collection.clips[0]).id));
+    return tab;
+  }));
+  delete $("clips").dataset.collection; // rebuild the strip, it may have a new upload in it
+  const wanted = show || location.hash.slice(1);
+  select(clips.some((c) => c.id === wanted) ? wanted : clips[0].id);
+}
+
+async function upload(file) {
+  if (!file) return;
+  const button = document.querySelector(".upload");
+  button.setAttribute("aria-busy", "true");
+  controller?.abort();
+  resetPanels();
+  $("verdict-label").textContent = "Uploading";
+  try {
+    const response = await fetch("/api/upload", {
+      method: "POST", body: file, headers: { "X-Filename": encodeURIComponent(file.name) },
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.detail || response.statusText);
+    await loadClips(body.id);
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    button.removeAttribute("aria-busy");
   }
-  const fromHash = location.hash.slice(1);
-  select(clips.some((c) => c.id === fromHash) ? fromHash : clips[0].id);
 }
 
 function showCollection(id) {
@@ -60,7 +79,9 @@ function showCollection(id) {
     nav.replaceChildren(...collection.clips.map((clip) => {
       seen[clip.short] = (seen[clip.short] || 0) + 1;
       const twins = collection.clips.filter((c) => c.short === clip.short).length;
-      const thumb = el("video", { src: `/media/${clip.id}.mp4#t=1.5`, muted: "", preload: "metadata" });
+      const thumb = clip.kind === "image"
+        ? el("img", { src: clip.media, alt: "" })
+        : el("video", { src: `${clip.media}#t=1.5`, muted: "", preload: "metadata" });
       const button = el("button", { class: "clip", type: "button", "data-id": clip.id, title: clip.summary },
         thumb, el("span", {}, clip.short, twins > 1 ? el("small", {}, "ABCDEFGH"[seen[clip.short] - 1]) : null));
       button.addEventListener("click", () => select(clip.id));
@@ -68,8 +89,8 @@ function showCollection(id) {
     }));
   }
   const s = collection.source;
-  $("credit").replaceChildren("Footage: ", el("a", { href: s.url, target: "_blank", rel: "noopener" }, `${s.author}, ${s.name}`),
-    ` · ${s.license} · ${s.note}`);
+  const name = s.url ? el("a", { href: s.url, target: "_blank", rel: "noopener" }, `${s.author}, ${s.name}`) : `${s.author} ${s.name}`;
+  $("credit").replaceChildren("Footage: ", name, ` · ${s.license} · ${s.note}`);
 }
 
 async function select(id) {
@@ -82,12 +103,22 @@ async function select(id) {
 
   controller?.abort();
   controller = new AbortController();
-  current = { clip, meta: null, checks: null, moments: [], xray: [], done: null };
+  current = { clip, meta: null, checks: null, progress: [], moments: [], xray: [], done: null, seen: 0 };
+  document.body.dataset.state = "reviewing";
   resetPanels();
 
-  video.src = `/media/${id}.mp4`;
-  video.currentTime = 0;
-  video.play().catch(() => {});
+  const still = clip.kind === "image";
+  $("still").hidden = !still;
+  video.hidden = still;
+  if (still) {
+    video.removeAttribute("src");
+    video.load();
+    $("still").src = clip.media;
+  } else {
+    video.src = clip.media;
+    video.currentTime = 0;
+    video.play().catch(() => {});
+  }
 
   const fresh = new URLSearchParams(location.search).has("fresh") ? "?fresh=1" : "";
   try {
@@ -117,10 +148,13 @@ function handle(event) {
       buildTimeline(event);
       buildChecks(event);
       break;
+    case "progress":
+      state.progress.push(event);
+      break;
     case "checks":
       state.checks = event;
-      paintChecks(event);
-      paintVerdict();
+      state.progress.push({ ...event, t: state.meta.duration });
+      if (state.meta.still) showVerdict(event, "Photo");
       break;
     case "moment":
       state.moments[event.i] = event;
@@ -132,7 +166,7 @@ function handle(event) {
       break;
     case "done":
       state.done = event;
-      paintStats();
+      document.body.dataset.state = "done";
       break;
     case "error":
       showError(event.message);
@@ -143,8 +177,9 @@ function handle(event) {
 function resetPanels() {
   $("lanes").replaceChildren();
   $("checks").replaceChildren();
-  $("stats").replaceChildren();
   $("live").replaceChildren();
+  $("verdict-when").textContent = "";
+  shownVerdict = null;
   const v = $("verdict");
   v.dataset.state = "idle";
   $("verdict-label").textContent = "Reviewing";
@@ -160,6 +195,7 @@ function showError(message) {
 /* timeline */
 
 function buildTimeline(meta) {
+  $("timeline").hidden = meta.still;
   const lanes = $("lanes");
   for (const [key, label] of Object.entries(meta.moments)) {
     lanes.append(el("div", { class: "lane-name", "--c": color(key) }, el("i"), label));
@@ -195,7 +231,8 @@ function paintMoment(event) {
   const left = event.i === 0 ? 0 : mid - step / 2;
   const right = event.i === meta.windows.length - 1 ? meta.duration : mid + step / 2;
   for (const [key, p] of Object.entries(event.answers)) {
-    const cell = el("div", { class: "cell", title: `${pct(p)} at ${mid.toFixed(1)}s` });
+    const cell = el("div", { class: "cell", title: `${pct(p)} at ${mid.toFixed(1)}s`, "data-from": left });
+    cell.hidden = left > current.seen;
     Object.assign(cell.style, span(left, right, meta.duration));
     cell.style.setProperty("--p", 0.08 + 0.92 * p ** 1.5);
     $(`lane-${key}`).append(cell);
@@ -205,6 +242,7 @@ function paintMoment(event) {
 function paintXray() {
   const { meta, xray } = current;
   const lane = $("lane-xray");
+  lane.style.visibility = current.seen < meta.duration ? "hidden" : "";
   lane.replaceChildren();
   const strongest = Math.max(0.05, ...xray.filter(Boolean).map((e) => e.effect));
   xray.forEach((event, k) => {
@@ -227,38 +265,58 @@ function buildChecks(meta) {
   }
 }
 
-function paintChecks(event) {
-  for (const [key, p] of Object.entries(event.answers)) {
+let shownVerdict = null;
+
+/* The verdict as it stood at time t: the latest "so far" answer the model gave up to t. */
+function verdictAt(t) {
+  const { progress, meta } = current;
+  if (!meta) return null;
+  if (video.ended) return progress.find((p) => p.t >= meta.duration) || null;
+  let best = null;
+  for (const p of progress) if (p.t <= t + 0.05 && p.t < meta.duration && (!best || p.t > best.t)) best = p;
+  return best;
+}
+
+function showVerdict(answer, when) {
+  if (answer === shownVerdict) return;
+  shownVerdict = answer;
+  const v = $("verdict");
+  if (!answer) {
+    v.dataset.state = "idle";
+    $("verdict-label").textContent = "Watching";
+    $("verdict-value").textContent = "—";
+    $("verdict-bar").style.width = "0";
+    $("verdict-when").textContent = "";
+    for (const row of $("checks").children) {
+      row.querySelector("b").textContent = "…";
+      row.querySelector(".bar i").style.width = "0";
+    }
+    return;
+  }
+  const flagged = answer.flag >= THRESHOLD;
+  v.dataset.state = flagged ? "flag" : "clear";
+  $("verdict-label").textContent = flagged ? "Flag for review" : "No flag";
+  $("verdict-value").textContent = pct(answer.flag);
+  $("verdict-bar").style.width = pct(answer.flag);
+  $("verdict-when").textContent = when;
+  for (const [key, p] of Object.entries(answer.answers)) {
     const row = $(`check-${key}`);
+    if (!row) continue;
     row.querySelector("b").textContent = pct(p);
     row.querySelector(".bar i").style.width = pct(p);
   }
 }
 
-function paintVerdict() {
-  const p = current.checks.flag;
-  const flagged = p >= THRESHOLD;
-  $("verdict").dataset.state = flagged ? "flag" : "clear";
-  $("verdict-label").textContent = flagged ? "Flag for review" : "No flag";
-  $("verdict-value").textContent = pct(p);
-  $("verdict-bar").style.width = pct(p);
-}
-
-function paintStats() {
-  const { checks, moments, done, meta } = current;
-  const perWindow = moments.reduce((s, m) => s + m.seconds, 0) / moments.length;
-  const rows = [
-    ["Model", `Clef-flash · ${device}`],
-    ["Whole clip", `${Math.round(checks.seconds * 1000)} ms`],
-    ["Each moment", `${Math.round(perWindow * 1000)} ms`],
-    ["Model calls", `${done.calls}`],
-    ["Frames", `${meta.frames} · ${meta.size[0]}×${meta.size[1]}`],
-  ];
-  if (done.replay) rows.push(["Run", "recorded"]);
-  $("stats").replaceChildren(...rows.flatMap(([k, v]) => [el("dt", {}, k), el("dd", {}, v)]));
-}
-
 /* playback */
+
+/* Lanes only show what the clip has played through so far, like the verdict. */
+function revealUpTo(seen) {
+  if (seen === current.seen || (seen <= current.seen + 0.05 && seen < current.meta.duration)) return;
+  current.seen = seen;
+  for (const cell of $("lanes").querySelectorAll(".cell[data-from]")) cell.hidden = Number(cell.dataset.from) > seen;
+  const xray = $("lane-xray");
+  if (xray) xray.style.visibility = seen < current.meta.duration ? "hidden" : "";
+}
 
 function nearestMoment(t) {
   const { meta, moments } = current;
@@ -278,8 +336,18 @@ function tick() {
   $("clock").textContent = `${String(Math.floor(t / 60)).padStart(2, "0")}:${(t % 60).toFixed(1).padStart(4, "0")}`;
   const meta = current?.meta;
   const head = $("playhead");
-  if (!meta) { head.style.display = "none"; return; }
   const track = $("lanes").querySelector(".track");
+  if (meta && !meta.still) {
+    revealUpTo(video.ended ? meta.duration : Math.max(current.seen, t));
+    const answer = verdictAt(t);
+    const whole = answer && answer.t >= meta.duration;
+    showVerdict(answer, !answer ? "" : whole ? "Whole clip" : `First ${Math.round(answer.t)} s`);
+  }
+  if (!meta || meta.still || !track) {
+    head.style.display = "none";
+    if (meta?.still) $("clock").textContent = "PHOTO";
+    return;
+  }
   const box = $("timeline").getBoundingClientRect();
   const r = track.getBoundingClientRect();
   head.style.display = "block";
@@ -294,6 +362,13 @@ function tick() {
     el("span", { class: "tag", "--c": color(k) }, el("i"), meta.moments[k], el("b", {}, pct(p)))));
 }
 
+$("video").parentElement.addEventListener("click", () => {
+  if (current?.clip.kind === "image") return;
+  if (video.ended) video.currentTime = 0;
+  if (video.paused) video.play().catch(() => {});
+  else video.pause();
+});
+
 $("timeline").addEventListener("click", (e) => {
   const meta = current?.meta;
   const track = $("lanes").querySelector(".track");
@@ -306,6 +381,32 @@ $("timeline").addEventListener("click", (e) => {
 window.addEventListener("hashchange", () => {
   const id = location.hash.slice(1);
   if (id !== current?.clip.id && clips.some((c) => c.id === id)) select(id);
+});
+
+$("upload").addEventListener("change", (e) => {
+  upload(e.target.files[0]);
+  e.target.value = "";
+});
+
+let dragDepth = 0;
+const dragging = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
+window.addEventListener("dragenter", (e) => {
+  if (!dragging(e)) return;
+  e.preventDefault();
+  dragDepth += 1;
+  $("drop").hidden = false;
+});
+window.addEventListener("dragover", (e) => { if (dragging(e)) e.preventDefault(); });
+window.addEventListener("dragleave", () => {
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (!dragDepth) $("drop").hidden = true;
+});
+window.addEventListener("drop", (e) => {
+  if (!dragging(e)) return;
+  e.preventDefault();
+  dragDepth = 0;
+  $("drop").hidden = true;
+  upload(e.dataTransfer.files[0]);
 });
 
 health();

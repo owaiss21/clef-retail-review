@@ -45,11 +45,17 @@ def test_review_streams_every_stage_in_order(clip_file):
     events = list(review(FakeBackend(), read_clip(clip_file, side=64)))
     kinds = [e["event"] for e in events]
     meta = events[0]
-    assert kinds[0] == "clip" and kinds[1] == "checks" and kinds[-1] == "done"
+    checks = next(e for e in events if e["event"] == "checks")
+    assert kinds[0] == "clip" and kinds[-1] == "done"
+    before = kinds[1 : kinds.index("checks")]
+    assert sorted(before) == sorted(["moment"] * len(meta["windows"]) + ["progress"] * len(meta["cuts"]))
+    assert set(kinds[kinds.index("checks") + 1 : -1]) == {"xray"}
     assert kinds.count("moment") == len(meta["windows"])
     assert kinds.count("xray") == len(meta["segments"])
-    assert events[-1]["calls"] == 1 + len(meta["windows"]) + len(meta["segments"])
-    assert events[1]["flag"] == pytest.approx(flag(events[1]["answers"]), abs=1e-3)
+    assert events[-1]["calls"] == len(meta["cuts"]) + 1 + len(meta["windows"]) + len(meta["segments"])
+    assert checks["flag"] == pytest.approx(flag(checks["answers"]), abs=1e-3)
+    progress = [e["t"] for e in events if e["event"] == "progress"]
+    assert progress == sorted(progress) and progress[-1] < meta["duration"]
 
 
 def test_flag_needs_hidden_and_not_put_back():
@@ -92,3 +98,50 @@ def test_every_clip_has_labels_inside_its_length():
             for label in clip["labels"]:
                 assert 0 <= label["start"] < label["end"] <= length + 0.01, clip["id"]
             assert clip["flag"] == any(lab["kind"] == "theft" for lab in clip["labels"]), clip["id"]
+
+
+@pytest.fixture
+def app_client(tmp_path, monkeypatch):
+    monkeypatch.setattr(server, "MEDIA", tmp_path / "media")
+    monkeypatch.setattr(server, "CACHE", tmp_path / "cache")
+    monkeypatch.setattr(server, "UPLOADS", tmp_path / "uploads")
+    return TestClient(server.create_app(FakeBackend()))
+
+
+def test_uploaded_photo_gets_checks_but_no_timeline(app_client, tmp_path):
+    photo = tmp_path / "shop.png"
+    cv2.imwrite(str(photo), np.full((120, 160, 3), 90, np.uint8))
+    entry = app_client.post("/api/upload", content=photo.read_bytes(), headers={"X-Filename": "shop%20floor.png"}).json()
+    assert entry["kind"] == "image" and entry["scene"] == "shop floor"
+    assert app_client.get(entry["media"]).status_code == 200
+
+    events = [json.loads(line) for line in app_client.post(f"/api/review/{entry['id']}").text.splitlines()]
+    assert [e["event"] for e in events] == ["clip", "checks", "done"]
+    assert events[0]["still"] is True and events[0]["windows"] == []
+
+    listed = app_client.get("/api/clips").json()
+    assert listed[-1]["id"] == "uploads" and listed[-1]["clips"][0]["id"] == entry["id"]
+
+
+def test_uploaded_video_is_reencoded_and_reviewed(app_client, clip_file):
+    entry = app_client.post("/api/upload", content=clip_file.read_bytes(), headers={"X-Filename": "door.mov"}).json()
+    assert entry["kind"] == "video" and entry["media"].endswith(".mp4")
+    again = app_client.post("/api/upload", content=clip_file.read_bytes(), headers={"X-Filename": "door.mov"}).json()
+    assert again["id"] == entry["id"]  # same file, same id
+    kinds = [json.loads(line)["event"] for line in app_client.post(f"/api/review/{entry['id']}").text.splitlines()]
+    assert "moment" in kinds and "xray" in kinds and kinds[-1] == "done"
+
+
+def test_upload_rejects_what_it_cannot_read(app_client):
+    assert app_client.post("/api/upload", content=b"hello", headers={"X-Filename": "notes.txt"}).status_code == 415
+    assert app_client.post("/api/upload", content=b"not a png", headers={"X-Filename": "x.png"}).status_code == 422
+    assert app_client.post("/api/upload", content=b"not a video", headers={"X-Filename": "x.mp4"}).status_code == 422
+
+
+def test_long_clips_are_thinned_for_the_whole_clip_question():
+    from retailreview.video import overview
+
+    frames = np.zeros((241, 8, 8, 3), np.uint8)
+    picked = overview(frames, 80)
+    assert len(picked) <= 80 and len(picked) % 2 == 0
+    assert len(overview(frames[:40], 80)) == 40

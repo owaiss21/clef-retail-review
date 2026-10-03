@@ -15,6 +15,7 @@ FRAME_PAIR = 2
 class Clip:
     frames: np.ndarray  # (T, H, W, 3) uint8 RGB
     duration: float  # seconds
+    still: bool = False  # a single photo, shown to the model as two identical frames
 
     @property
     def rate(self) -> float:
@@ -56,11 +57,26 @@ def read_clip(path, fps: float = 4.0, side: int = 448) -> Clip:
     return Clip(np.stack(frames), duration)
 
 
+def read_image(path, side: int = 448) -> Clip:
+    frame = cv2.imread(str(path), cv2.IMREAD_COLOR)
+    if frame is None:
+        raise ValueError(f"could not read an image from {path}")
+    frame = _resize(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), side)
+    return Clip(np.stack([frame] * FRAME_PAIR), 1.0, still=True)
+
+
 def _resize(frame: np.ndarray, side: int) -> np.ndarray:
     h, w = frame.shape[:2]
     scale = side / max(h, w)
     size = (max(32, round(w * scale / 32) * 32), max(32, round(h * scale / 32) * 32))
     return cv2.resize(frame, size, interpolation=cv2.INTER_AREA)
+
+
+def overview(frames: np.ndarray, limit: int) -> np.ndarray:
+    """At most `limit` evenly spaced frames, so a long clip still fits on the GPU in one pass."""
+    step = -(-len(frames) // limit)
+    picked = frames[::step]
+    return picked[: len(picked) // FRAME_PAIR * FRAME_PAIR]
 
 
 def windows(clip: Clip, length: int, step: int) -> list[tuple[int, int]]:

@@ -46,7 +46,8 @@ def main():
             if not path.exists():
                 continue
             events = list(review(backend, read_clip(path)))
-            meta, checks, done = events[0], events[1], events[-1]
+            meta, done = events[0], events[-1]
+            checks = next(e for e in events if e["event"] == "checks")
             moments = [e for e in events if e["event"] == "moment"]
             spans = meta["windows"]
             row = {"collection": collection["id"], "clip": clip["id"], "label": clip["flag"],

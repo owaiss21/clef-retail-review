@@ -1,9 +1,9 @@
 """Record the page as a GIF (and an MP4 next to it) while it reviews a few clips.
 
-    python scripts/record_demo.py docs/img/demo.gif hardware-hide hardware-return
+    python scripts/record_demo.py docs/img/demo.gif jacket picks-2
 
-Needs the server running and ffmpeg on PATH. Each clip is filmed until its review is done,
-plus a few seconds.
+Needs the server running and ffmpeg on PATH. Each clip is filmed until its review is done and
+the video has played to the end, plus a few seconds.
 """
 
 import argparse
@@ -14,6 +14,8 @@ import time
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
+
+FINISHED = "document.body.dataset.state === 'done' && (document.getElementById('video').ended || document.getElementById('video').hidden)"
 
 
 def main():
@@ -34,7 +36,7 @@ def main():
         page = browser.new_page(viewport={"width": 1280, "height": 800}, device_scale_factor=1,
                                 color_scheme="dark" if args.dark else "light")
         page.goto(f"{args.url}#{args.clips[0]}")
-        page.wait_for_selector("#stats dt", timeout=120_000)  # fonts and thumbnails settled
+        page.wait_for_function("document.body.dataset.state === 'done'", timeout=120_000)  # fonts and thumbnails settled
 
         def film(until):
             while not until():
@@ -50,7 +52,7 @@ def main():
                 page.evaluate(f"location.hash = '{clip}'")
                 page.wait_for_selector(f".clip[data-id='{clip}'][aria-current='true']")
             page.evaluate("document.getElementById('video').currentTime = 0")
-            film(lambda: page.query_selector("#stats dt") is not None)
+            film(lambda: page.evaluate(FINISHED))
             stop = time.perf_counter() + args.hold
             film(lambda: time.perf_counter() > stop)
         browser.close()

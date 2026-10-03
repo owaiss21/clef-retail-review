@@ -24,8 +24,7 @@ def main():
         page = browser.new_page(viewport={"width": args.width, "height": args.height},
                                 color_scheme="dark" if args.dark else "light", device_scale_factor=1)
         page.goto(f"{args.url}#{args.clip}")
-        page.wait_for_selector("#verdict:not([data-state='idle'])", timeout=120_000)
-        page.wait_for_selector("#stats dt", timeout=120_000)
+        page.wait_for_function("document.body.dataset.state === 'done'", timeout=120_000)
         if args.at is not None:
             page.evaluate(f"(() => {{ const v = document.getElementById('video'); v.pause(); v.currentTime = {args.at}; }})()")
             page.wait_for_timeout(500)
